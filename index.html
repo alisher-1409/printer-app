@@ -3,27 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ali Sher Printer App</title>
+    <title>Ali Sher Rate List</title>
     <link rel="manifest" href="manifest.json">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
-        body { font-family: Arial; text-align: center; padding: 50px; background: #f4f4f4; }
-        .btn { background: #28a745; color: white; padding: 20px; border: none; border-radius: 10px; font-size: 20px; cursor: pointer; width: 80%; }
-        h1 { color: #333; }
+        body { font-family: Arial; padding: 15px; background: #1a1a1a; color: white; text-align: center; }
+        input { padding: 12px; margin: 5px; border-radius: 5px; border: none; width: 80%; font-size: 16px; }
+        .btn { padding: 12px; margin: 5px; border-radius: 5px; border: none; cursor: pointer; font-weight: bold; width: 42%; }
+        .save-btn { background: #28a745; color: white; }
+        .pdf-btn { background: #007bff; color: white; width: 88%; }
+        .del-btn { background: #dc3545; color: white; padding: 5px 10px; width: auto; font-size: 12px; }
+        #search { background: #333; color: white; border: 1px solid #555; margin-top: 20px; }
+        table { width: 100%; margin-top: 20px; border-collapse: collapse; background: #222; }
+        th, td { border: 1px solid #444; padding: 10px; text-align: left; }
+        th { background: #333; }
+        .search-container { margin-bottom: 20px; }
     </style>
 </head>
 <body>
-    <h1>Ali Sher Printer App</h1>
-    <p>Ye app PWA hai aur install ho sakti hai.</p>
-    <button class="btn" onclick="printText()">Print Test</button>
+
+    <h2>Ali Sher Product Rates</h2>
+
+    <input type="text" id="pName" placeholder="Product Name (e.g. Printer)">
+    <input type="number" id="pRate" placeholder="Rate (e.g. 5000)">
+    <br>
+    <button class="btn save-btn" onclick="saveProduct()">Save Product</button>
+    <button class="btn" onclick="clearInputs()" style="background:#666; color:white;">Clear</button>
+
+    <div class="search-container">
+        <input type="text" id="search" placeholder="🔍 Search Product..." onkeyup="loadTable()">
+    </div>
+
+    <button class="btn pdf-btn" onclick="generatePDF()">Download PDF List</button>
+
+    <table id="rateTable">
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Rate</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+    </table>
 
     <script>
-        function printText() {
-            alert("Printer Command Sent!");
+        // Data Save Karne ke liye
+        function saveProduct() {
+            const name = document.getElementById('pName').value;
+            const rate = document.getElementById('pRate').value;
+
+            if (name === "" || rate === "") {
+                alert("Please enter Name and Rate!");
+                return;
+            }
+
+            let products = JSON.parse(localStorage.getItem('myProducts')) || [];
+            products.push({ name: name, rate: rate });
+            localStorage.setItem('myProducts', JSON.stringify(products));
+
+            clearInputs();
+            loadTable();
         }
-        // Service Worker Register karna
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js');
+
+        // Table Load aur Search filter
+        function loadTable() {
+            const tbody = document.getElementById('tableBody');
+            const searchText = document.getElementById('search').value.toLowerCase();
+            tbody.innerHTML = "";
+
+            let products = JSON.parse(localStorage.getItem('myProducts')) || [];
+
+            products.forEach((item, index) => {
+                if (item.name.toLowerCase().includes(searchText)) {
+                    let row = `<tr>
+                        <td>${item.name}</td>
+                        <td>${item.rate}</td>
+                        <td><button class="del-btn" onclick="deleteProduct(${index})">Delete</button></td>
+                    </tr>`;
+                    tbody.innerHTML += row;
+                }
+            });
         }
+
+        // Delete Function
+        function deleteProduct(index) {
+            let products = JSON.parse(localStorage.getItem('myProducts')) || [];
+            products.splice(index, 1);
+            localStorage.setItem('myProducts', JSON.stringify(products));
+            loadTable();
+        }
+
+        function clearInputs() {
+            document.getElementById('pName').value = "";
+            document.getElementById('pRate').value = "";
+        }
+
+        // PDF Generator
+        function generatePDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            let products = JSON.parse(localStorage.getItem('myProducts')) || [];
+
+            doc.setFontSize(18);
+            doc.text("Ali Sher - Product Rate List", 10, 10);
+            doc.setFontSize(12);
+            doc.text("Generated on: " + new Date().toLocaleDateString(), 10, 20);
+
+            let y = 30;
+            doc.text("Product Name", 10, y);
+            doc.text("Rate", 100, y);
+            doc.line(10, y+2, 150, y+2);
+            
+            y += 10;
+            products.forEach((item) => {
+                doc.text(item.name, 10, y);
+                doc.text(item.rate, 100, y);
+                y += 10;
+            });
+
+            doc.save("Product_Rates.pdf");
+        }
+
+        // App khulte hi table dikhao
+        window.onload = loadTable;
     </script>
 </body>
 </html>
