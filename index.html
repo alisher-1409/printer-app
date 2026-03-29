@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ali Sher Printer App</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        body { font-family: Arial; text-align: center; padding: 50px; background: #f4f4f4; }
+        .btn { background: #28a745; color: white; padding: 20px; border: none; border-radius: 10px; font-size: 20px; cursor: pointer; width: 80%; }
+        h1 { color: #333; }
+    </style>
+</head>
+<body>
+    <h1>Ali Sher Printer App</h1>
+    <p>Ye app PWA hai aur install ho sakti hai.</p>
+    <button class="btn" onclick="printText()">Print Test</button>
+
+    <script>
+        function printText() {
+            alert("Printer Command Sent!");
+        }
+        // Service Worker Register karna
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+    </script>
+</body>
+</html>
